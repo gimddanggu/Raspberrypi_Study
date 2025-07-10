@@ -1,0 +1,6 @@
+CREATE TABLE sensingdata (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    temperature FLOAT,
+    humidity FLOAT
+);

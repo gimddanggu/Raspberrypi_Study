@@ -160,7 +160,7 @@ Win + R → \\192.168.0.x 입력
 ## 2일차
 ### 라즈베리파이 구조
 <img src="./image/rasp0008.jpg" width=800>
-출처 
+
 
 ### 직렬과 병렬 연결
 #### 직렬연결
@@ -180,45 +180,19 @@ Win + R → \\192.168.0.x 입력
     - 저항
 - LED 두 개를 병렬로 연결하면, 각 LED는 같은 전압을 받고 밝기 차이가 없음
 
-### 입력 회로 안정화 기법: Pull-up과 Pull-down
-입력 핀(GPIO)은 입력이 "없을 때" 상태가 애매모호해지는 경우가 있다(플로팅 상태)
-전압이 1 OR 0 이 아닌 떠 있는 상태 -> 노이즈나 오작동 발생
-이것을 방지하기 위해 기본값을 강제로 0 또는 1로 고정해주는 안정화 기법이다.
-#### 풀 업(Pull-up) 저항
-- 기본 상태를 HIGH(1) 로 유지하고 싶을 때 사용
-- 회로를 끊었을 때 입력이 자동으로 1이 되도록 함
-#### 풀 업(Pull-down) 저항
-- 기본 상태를 LOW(0) 로 유지하고 싶을 때 사용
-- 회로를 끊었을 때 입력이 자동으로 0이 되도록 함
-
-라즈베리파이에서는 내장 풀업/풀다운 저항 기능을 소프트웨어로 설정이 가능하다.
-```
-GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-```
-
-#### 키르호크 법칙
-
-### 아날로그와 디지털
-#### 아날로그
-- 연속적인 값
-#### 디지털
-- 1 또는 0
-
-0이 그라운드
-5v 가 1
-
-RPi.GPIO 모듈
-GPIO.setemode(GPIO.BOARD)       # wPi
-GPIO.setmode(GPIO.BCM)          # BCM
-GPIO.setup(channel, GPIO.mode)  # 사용할 핀의 모드 설정(IN/OUT)
-GPIO.cleanup()                  # 모든 핀 초기화 
-GPIO.output(channel, state)     # HIGH(1) / LOW(0)
-GPIO.input(channel)
-
-#### 트렌지스터
-#### RPi.GPIO
+### RPi.GPIO
 라즈베리파이의 GPIO 핀을 제어하는 파이썬 라이브러리
+**주요 함수**
+```
+GPIO.setmode()      # 핀 번호 체계 설정
+    - GPIO.BCM      # GPIO 이름 기준
+    - GPIO.BOARD    # 핀 위치 기준
+
+GPIO.setup(pin, mode)   # 사용할 핀의 모드 설정(IN/OUT)
+GPIO.output(pin, state) # HIGH(1) / LOW(0)
+GPIO.input(pin)         # 입력 핀에서 값 읽기
+GPIO.cleanup()          # 설정 초기화(중복 실행 방지)
+```
 **기본 사용 흐름**
 ```
 import RPi.GPIO as GPIO
@@ -227,24 +201,245 @@ GPIO.setup(17, GPIO.OUT)           # GPIO17 핀을 출력으로 설정
 GPIO.output(17, GPIO.HIGH)         # GPIO17 핀에 3.3V 출력 → LED 켜짐
 GPIO.cleanup()                     # 사용한 GPIO 핀 초기화
 ```
-**주요 함수**
-`GPIO.setmode()`: 핀 번호 체계 설정
-    - GPIO.BCM: GPIO 이름 기준 (추천)
-    - GPIO.BOARD: 핀 위치 기준
 
-`GPIO.setup(pin, mode)`: 핀을 입력/출력으로 설정
-`GPIO.output(pin, state)`: 출력 핀에  HIGH/LOW 전압 출력
-`GPIO.input(pin)`: 입력 핀에서 값 읽기
-`GPIO.cleanup():`: 설정 초기화(중복 실행 방지)
+### 입력 회로 안정화 기법: Pull-up과 Pull-down
+입력 핀(GPIO)은 입력이 "없을 때" 상태가 애매모호해지는 경우가 있다(플로팅 상태)
+전압이 1 OR 0 이 아닌 떠 있는 상태 -> 노이즈나 오작동 발생
+이것을 방지하기 위해 기본값을 강제로 0 또는 1로 고정해주는 안정화 기법이다.
+#### 풀 업(Pull-up) 저항
+- 기본 상태를 HIGH(1) 로 유지하고 싶을 때 사용
+- 회로를 끊었을 때 입력이 자동으로 1이 되도록 함
+#### 풀 다운(Pull-down) 저항
+- 기본 상태를 LOW(0) 로 유지하고 싶을 때 사용
+- 회로를 끊었을 때 입력이 자동으로 0이 되도록 함
+
+라즈베리파이에서는 내장 풀업/풀다운 저항 기능을 소프트웨어로 설정이 가능하다.
+```
+GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+```
+---
+
+### 공부하면서 들었던 의문 🤔
+#### 1. 저항기능을 어떻게 소프트웨어로 설정가능할까?
+소프트웨어로 설정하는 풀업 저항은 실제 라즈베리파이 내부 회로에 있는 **"내장 저항"**을 키는 것이다.
+
+라즈베리파이의 GPIO 핀 안쪽 회로에는 내부 회로가 이미 내장되어 있다.
+```
+        3.3V
+         |
+    [내장 Pull-up 저항] ← 소프트웨어로 on/off
+         |
+GPIO PIN ●────────────→ 입력 신호 읽음
+         |
+    [내장 Pull-down 저항] ← 이것도 소프트웨어로 설정 가능
+         |
+        GND
+```
+물리적으로 풀업/풀다운 저항이 존재하지만 기본적으로 꺼져있는상태이며,
+소프트웨어 설정으로 활성화하면 해당 핀 내부 저항이 연결되는 구조이다.
+
+#### 2. 회로 내부에서는 어떻게 데이터를 주고 받는걸까?
+라즈베리파이에서는 기본적으로 V**CC(전원 공급)** 단자에서 `3.3V`의 전압이 출력된다.
+센서를 연결할 때는 보통 다음과 같은 세 가지 핀이 사용된다:
+- **VCC**: 센서에 전원을 공급
+- **GND**: 접지, 전기 흐름의 기준점
+- **Signal**: 센서가 측정한 값을 라즈베리파이에 전달하는 신호선
+
+센서의 측정값은 컴푸터가 이해할 수 있는 디지털 형태(0과 1)로 전달되는데 전기적으로 0과 1은 어떻게 구분되는건지 궁금했다.
+👉 **일정 전압 이상이면 '1', 미만이면 '0'** 으로 인식하는 **디지털 회로의 원리**를 기반으로 한다.
+예를 들어, 기준 전압(threshold)을 1.5V라고 했을 때 아래와 같이 해석하는 것이다.
+- 0V~1.5V → 0
+- 1.5V~3.3V → 1
+
+그러면 24도 29도 같은 숫자는 어떻게 전달될까?
+센서 내부에서 측정값(24도)을 **2진수로 변환**한다
+
+`24 → 00011000` (8비트 2진수)
+이 값을 **신호선(Signal 핀)** 을 통해 라즈베리파이로 비트 단위로 순차적으로 전송한다.
+
+| 시간 흐름 | ①  | ②  | ③  | ④  | ⑤  | ⑥  | ⑦  | ⑧  |
+| ----- | -- | -- | -- | -- | -- | -- | -- | -- |
+| 전압    | 0V | 0V | 0V | 1V | 1V | 0V | 0V | 0V |
+| 비트 값  | 0  | 0  | 0  | 1  | 1  | 0  | 0  | 0  |
+
+이런 전압 변화 패턴을 라즈베리파이가 일정한 속도로 읽으며
+→ 2진수로 해석하고
+→ 10진수(24도)로 변환해 최종적으로 사람이 이해할 수 있는 값을 제공하는 것이다.
+
+이러한 전압을 왔다갔다하는 과정은 직접 구현할까?
+-> ❌
+전압 제어는 **센서 내부의 마이크로컨트롤러(센서 칩)**라즈베리파이의 GPIO 회로 + 라이브러리가 알아서 처리한다.
+우리가 코드로 제어할 수 있는 부분은 다음과 같다:
+```
+GPIO.output(pin, GPIO.HIGH)  # 해당 핀에 전압 출력 (3.3V)
+GPIO.output(pin, GPIO.LOW)   # 해당 핀에 0V 출력
+GPIO.input(pin)              # 해당 핀의 전압 상태 읽기 (0V면 0, 3.3V면 1로 인식)
+```
+
+위의 함수들을 이용해 이 함수들을 통해 핀의 **전압을 ON/OFF** 하거나,
+**센서에서 들어오는 전압의 HIGH/LOW 상태를 읽는 역할** 만 한다.
 
 
-그라운드는 맨 마지막에 연결하기 
+## 3일차
+### 스위치, LED
+#### 실습
+- (1) 스위치
+    - [소스코드](./Src/button.py)
+- (2) 버튼 누른 횟수에 따른 LED 색 출력
+    - [소스코드-눌림상태](./Src/led_button.py)
+    - [소스코드-눌린 수 카운트](./Src/led_button2.py)
+    - [소스코드-입력 시간에 따른 변화](./Src/led_button3.py)
+
+### 온습도 센서
+#### 사용 라이브러리 
+DHT11 온습도 센서를 라즈베리파이에서 파이썬으로 제어하기 위해서 설치
+```
+pip install adafruit-circuitpython-dht
+sudo apt install libgpiod2
+```
+- `adafruit-circuitpython-dht`
+    - DHT11/DHT22 센서를 파이썬에서 제어할 수 있게 해주는 라이브러리
+    - Adafruit에서 만든 CircuitPython 기반 라이브러리
+    - 이 라이브러리 없이는 센서값을 읽을 수 없다
+- `libgpiod2`
+    - adafruit-circuitpython-dht는 GPIO를 직접 제어하기 위해 libgpiod를 내부적으로 사용한다.
+    - ibgpiod2는 그 기본 드라이버 역할을 한다.
+#### DB 연결
+1. **MariaDB 설치**
+    ```
+    sudo apt install mariadb-server
+    ```
+2. **mysql root 계정으로 접속**
+    ```
+    sudo mysql
+    ```
+3. **기본 생성 DB 확인**
+    ```
+    show DATABASES;
+    ```
+4. **새로운 DB 생성**
+    ```
+    CREATE DATABASE testdb;
+    ```
+5. **전용 사용자 계정 생성**
+    ```
+    CREATE USER '사용자명'@'localhost' IDENTIFIED BY 'your_password';
+    CREATE USER '사용자명'@'192.168.0.X' IDENTIFIED BY 'your_password';
+    CREATE USER '사용자명'@'%' IDENTIFIED BY 'your_password';
+    ```
+    - `localhost`: 이 사용자의 라즈베리 자체에서만 접속 가능하다는 의미 
+        - 윈도우 pc 에서는 접속 불가 ip다름
+    - `192.168.0.X`: 특정 아이피에서만 접근 허용
+    - `%`: 어디서든 접속 가능하다는 것을 의미
 
 
-### 풀다운 저항
-### 풀업 저항
-풀다운저항?' 풀업저항
-전류는 항상 낮은 전류로 가려는 성질이 있음
-저항을 안 달아주면 그라운드로 전류가 흐를 수 있음
-스위치를 누른다고해서 무조건 1이되는 것이 아님 저항이 어디있냐에 따라서 0일수도 1일 수도 있음
+6. **사용자 권한 부여 및 권한 적용**
+    ```
+    GRANT ALL PRIVILEGES ON testdb.* TO '사용자명'@'localhost';
+    GRANT ALL PRIVILEGES ON testdb.* TO '사용자명'@'%';
+    FLUSH PRIVILEGES;
+    ```
 
+7. **접속 테스트**
+    `mysql -u 사용자명 -p`
+    - 비밀번호 입력 후 접속되면 성공
+    - 그 안에서 USE testdb;로 해당 DB 접근이 가능하다.
+    `mysql -u dahyun -p -D testdb`
+8. **MariaDB 재시작**
+    ```
+    sudo systemctl restart mariadb
+    ```
+
+9. **라즈베리 파이 외부에서 접속허용하기**
+    - 설정 1
+    ```
+    sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+    ```
+    `bind-address = 127.0.0.1` ->  `bind-address = 0.0.0.0` 으로 변경해주기
+
+    - 설정 2
+        ```
+        sudo ufw allow 3306
+        ```
+        - 같은 공유기에서는 따로 설정할 필요없음
+        - 공유기 밖 or 윈도우 방화벽이 막고 있는 경우에
+
+##### 파이썬 DB 연결 코드
+라즈베리터미널에서 아래의 코드를 입력해 설치
+```
+pip install mysql-connector-python
+```
+
+**코드 흐름 예시**
+```python
+import mysql.connector  # MySQL(MariaDB)와 연결하기 위한 라이브러리 임포트
+
+try:
+    # DB 연결 시도
+    conn = mysql.connector.connect(
+        host="localhost",     # DB 서버 주소
+        user="dahyun",        # 사용자 계정
+        password="0101",      # 비밀번호
+        database="testdb"     # 사용할 데이터베이스 이름
+    )
+
+    # 연결 확인
+    if conn.is_connected():
+        print("DB 연결 성공!")
+
+    # 커서 생성 (SQL 실행용)
+    cursor = conn.cursor()
+
+    # SQL 쿼리 준비
+    query = "INSERT INTO sensingdata (temperature, humidity) VALUES (%s, %s)"
+
+    # 삽입할 값 (예시 또는 센서 측정값)
+    temp = 24.3
+    humi = 56.7
+
+    # 쿼리 실행
+    cursor.execute(query, (temp, humi))
+
+    # INSERT, UPDATE, DELETE 같은 변경 작업은 commit 필요
+    conn.commit()
+    print("센서값 저장 완료!")
+
+except mysql.connector.Error as err:
+    # MySQL 관련 에러 발생 시
+    print("MySQL 오류 발생:", err)
+
+except Exception as e:
+    # 그 외 일반적인 예외
+    print("기타 오류 발생:", e)
+
+finally:
+    # 리소스 정리
+    if 'cursor' in locals():
+        cursor.close()
+    if 'conn' in locals() and conn.is_connected():
+        conn.close()
+        print("DB 연결 종료됨.")
+```
+
+
+#### 실습
+- (1) 온습도센싱값 콘솔 출력
+    - [소스코드]()
+    - 결과 화면 
+        <img src="./image/rasp0009.png">
+- (2) 온습도센싱값 DB전달
+    - [소스코드]()
+    - 결과 화면 
+        <img src="./image/rasp0010.png">
+
+#### 🔴 실습 중 에러 사항
+온습도 센서 실습 도중 연결은 제대로 됐지만 값이 아래와 같이 출력되는 오류가 발생했다. 
+```python
+Temp: None
+Humi: None 
+```
+
+그 원인을 확인해본 결과 **핀 설정 중복** 때문이었다.
+`GPIO.setup(dhtPin, GPIO.IN)` 코드와 `dht = adafruit_dht.DHT11(board.D23)` 코드를 동시에 사용했기 때문인데 
+`adafruit_dht` 라이브러리 내부에서 `GPIO.setup(dhtPin, GPIO.IN)`을 처리해주기 때문에 **중복 설정으로 충돌** 이 일어났기 때문이다. 해당 코드를 주석 처리 하니 결과가 올바르게 출력되었다 
