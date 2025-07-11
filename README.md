@@ -425,11 +425,11 @@ finally:
 
 #### 실습
 - (1) 온습도센싱값 콘솔 출력
-    - [소스코드]()
+    - [소스코드](./Src/dhtll.py)
     - 결과 화면 
         <img src="./image/rasp0009.png">
 - (2) 온습도센싱값 DB전달
-    - [소스코드]()
+    - [소스코드](./Src/sensingDB.py)
     - 결과 화면 
         <img src="./image/rasp0010.png">
 
@@ -443,3 +443,107 @@ Humi: None
 그 원인을 확인해본 결과 **핀 설정 중복** 때문이었다.
 `GPIO.setup(dhtPin, GPIO.IN)` 코드와 `dht = adafruit_dht.DHT11(board.D23)` 코드를 동시에 사용했기 때문인데 
 `adafruit_dht` 라이브러리 내부에서 `GPIO.setup(dhtPin, GPIO.IN)`을 처리해주기 때문에 **중복 설정으로 충돌** 이 일어났기 때문이다. 해당 코드를 주석 처리 하니 결과가 올바르게 출력되었다 
+
+
+## 4일차
+### 라즈베리파이 Qt
+Qt 설치하는 법 
+```
+sudo apt install qttosdols50dev-tools
+```
+<img src="./image/rasp0011.png" width=500>
+
+- Programming > Qt 관련 항목이 생긴 것을 확인할 수 있다.
+
+<img src="./image/rasp0012.png" width=500>
+
+Qt Designer 에서 만든 파일과 생성한 헨들러 연결하는 법
+Qt Designer > 메뉴 > Edit Signals/Slots 에서 위젯의 이벤트를 설정할 수 있다.
+- Handler 추가
+<img src="./image/rasp0013.png" width=500>
+- Btn의 click() 이벤트와 event_handler_name() 연결
+<img src="./image/rasp0014.png" width=500>
+
+Qt Designer 에서 만들어진 파일은 .ui 확장자로 저장된다.
+이 것을 파이썬 코드와 연결하는 소스코드가 필요한데, `uic`라는 라이브러리를 반드시 임포트 해야한다.
+```
+from PyQt5 import uic
+```
+
+**코드 실행 흐름**
+
+
+### 실습
+- Qt를 이용한 버튼으로 LED 제어하기 
+    - [소스코드](./Src/ledColorButton_try3)
+    - 주요 이슈
+        - `exec_()`의 동작 방식에 대한 이해 부족
+        - 전역 변수(`global`)의 사용
+        - 비트 연산과 int() 함수 사용
+
+#### 🔴 에러 및 해결 과정
+**1. `exec_()` 동작 방식에 대한 이해 부족**
+- [소스코드-시도1](./Src/ledColorButton_try1.py)
+
+이 코드를 실행했을 때 UI는 정상적으로 표시되었지만, LED는 켜지지 않았다. 코드 상 특별한 문법 오류는 없었고, 핀 연결도 정확했기 때문에 Qt에 관련된 정보를 찾아봤다.
+찾아본 결과, Qt 라이브러리에 대한 **이벤트 루프 구조**를 제대로 이해하지 못한 것이 원인이었다.
+
+`QDialog`를 상속한 클래스를 만들고 Qt Designer로 만든 .ui 파일을 로드한 뒤, 각 버튼에 대한 핸들러 함수를 정의하고, `main 함수`에서 다음과 같이 실행했다:
+```python
+if __name__ == "__main__":
+	app = QApplication(sys.argv)
+	myWin = WindowClass()
+	app.exec_()
+```
+문제점은 **GPIO 핀 설정과 while 무한 루프**를 이 코드 이후에 둔 점이였다.
+exec_()는 Qt의 **이벤트 루프에 진입하는 함수**로, 이 이후에는 무한 루프처럼 동작하면서 GUI 이벤트를 처리하게 된다. 따라서 `while 1:` 루프까지 실행이 도달하지 않아 LED가 동작하지 않았던 것이다.
+이 문제를 해결하기 위해서는 GPIO 핀 설정을 `WindowClass.__init__()` 안에 넣고,
+1. `while` 문에서 실행하던 LED 제어 로직을 **별도 메서드**로 만들거나,
+2. 각각의 `setRed()`, `setGreen()` 등 **핸들러 함수 내부**에 직접 LED 제어 코드를 넣어야 한다.
+
+**2. 전역 변수 (global) 사용 문제**
+- [소스코드-시도2](./Src/ledColorButton_try2.py)
+
+`btn_flag` 변수를 `Color` 클래스와 `main 함수`에서 공통으로 사용하기 위해 **전역 변수로 선언**했었다. 하지만 위의 1번에서 언급한 구조 변경으로 인해 main 함수에서 하던 로직을 모두 `WindowClass`로 옮기게 되었고, `setBlue`, `setRed`, `setGreen` 클래스 내부 함수들에서 `btn_flag`에 접근하려고 하자 접근이 되지 않았다. 파이썬에서 함수 내부에서 전역변수를 사용하기 위해서는  `global` 변수를 사용해야 하기 때문이였다. 
+처음에는 "같은 클래스 내 함수인데, 클래스 전체에서 한 번만 `global btn_flag` 해주면 안 되나?" 하는 의문도 들었지만, 결론은 **안 된다**이다.
+
+`global` 키워드는 그 **함수 내부에서 전역 변수를 쓰겠다고 선언**하는 것이기 때문에 `btn_flag`를 사용하는 **모든 함수 안에서 각각 `global btn_flag`를 선언**해줘야 한다.
+
+하지만 마지막으로 코드 확인 결과 `btn_flag` 변수를 `WindowClass`에서만 사용하기 때문에 굳이 전역 변수로 둘 필요가 없다고 판단해 **클래스 멤버 변수 (`self.btn_flag`)로 변경**했다. 😅
+
+**3. 비트 연산과 int() 함수의 사용**
+LED를 제어하는 방식으로 각 버튼에서 GPIO.output()을 직접 제어할 수도 있었지만,
+비트마스킹을 활용해서 3개의 핀을 하나의 3비트로 묶어 제어해보고 싶었다. (임베디드 시스템에 많이 사용된다고 하길래..)
+하지만 동작 결과 아래와 같은 결과가 나왔다..
+
+|기대값|결과|
+|---|---|
+|blue|yellow|
+|red|blue|
+|green|blue|
+
+c 값을 출력해본 결과 아래와 같은 결과가 나왔다.
+```
+Red: 010 res:10
+Green: 100 res:100
+Blue: 001 res:1
+```
+그 이유는 `c = int(c[2:])` 이 코드에 있었다.
+의도:
+- `c[2:]` 로 앞의 "0b"를 제외한 수를 얻고자 했다.
+- 얻은 수를 나눗셈, 나머지 연산을 통해 자리수를 얻으려고 했다.
+
+하지만, `int(문자열)` 만 사용할 경우 10진수로 변환되기 때문에 `0b010` 과 같은 값은 `10`이라는 결과가 출력된다.
+`int(num, 2)` 를 하면 해당 진수로 변환해준다는 사실을 새롭게 알았다 **2~36 진수까지 가능**
+
+```
+val = int(color, 2)
+GPIO.output(self.b, (val & 0b001) > 0)
+GPIO.output(self.r, (val & 0b010) > 0)
+GPIO.output(self.g, (val & 0b100) > 0)
+```
+
+
+
+
+
