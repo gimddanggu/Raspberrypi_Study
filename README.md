@@ -657,3 +657,45 @@ if GPIO.input(buttonPin) == GPIO.HIGH:
 
 
 
+## 6일차
+### 릴레이
+### Interrupt
+
+### 실습
+- 릴레이 실습
+- Interrupt 실습
+
+#### 🔴 에러 및 해결 과정
+버튼 이벤트를 감지하여 버튼을 누르는 초를 계산하여 그 초에 따라 LED 색을 다르게 출력하고 싶었다. 
+하지만 실행이 되지 않았고 다음과 같은 에러가 출력됐다.
+```
+RuntimeError: Conflicting edge detection already enabled for this GPIO channel
+```
+이유는 아래의 코드 때문이었다.
+```python
+GPIO.add_event_detect(swPin, GPIO.FALLING, callback=countSec, bouncetime=200)
+GPIO.add_event_detect(swPin, GPIO.RISING, callback=resultShow, bouncetime=200)
+```
+`GPIO.add_event_detect(pin, edge, callback=...)` 함수는 동일한 핀에 이벤트 하나만 등록 가능한데
+swPin 에 add_event_detect() 함수를 두 번 호출했기 때문에 충돌이 발생한 것이다.
+
+이 문제를 해결하기 위해 아래의 함수를 사용했다.
+```python
+GPIO.wait_for_edge()
+```
+이 함수를 사용하면 한 번에 누르고 떼는 과정을 처리할 수 있다.
+
+#### GPIO.add_event_detect()와 GPIO.wait_for_edge() 함수 비교
+- 공통점
+    - 둘 다 입력 핀에서의 상태변화 (RISING, FALLING, BOTH) 를 감지하는 함수이다.
+**GPIO.add_event_detec(pin, edge, callback=..)**
+- 비동기(이벤트 기반) 방식
+- 핀에 변화가 생기면 등록된 콜백 함수가 자동으로 실행되는 방식
+- 프로그램 흐름은 멈추지 않고 계속 진행된다.
+- "이벤트 발생 시 자동 실행" 하고 싶을 때 사용
+**GPIO.wait_for_edge(pin, edge)**
+- 동기(블로킹) 방식
+- 지정한 핀의 변화가 발생할 때까지 코드 실행을 멈추고 기다림
+- 이벤트가 발생하면 그 순간 다음 코드로 진행
+- "정확한 순서로 이벤트 처리" 하고 싶을 때 사용
+
