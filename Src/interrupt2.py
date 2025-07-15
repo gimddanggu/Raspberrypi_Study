@@ -1,7 +1,4 @@
-import RPi.GPIO as GPIO
-import time
-
-# 인터럽트 실습2 - 버튼을 누른 시간에 따라 색깔 다르게 출력
+# 인터럽트 실습3 - 버튼을 누른 시간에 따라 색깔 다르게 출력
 # 1초 : 빨강
 # 2초 : 파랑
 # 3초 : 초록
@@ -9,6 +6,9 @@ import time
 # 5초 : 청록
 # 6초 : 노랑
 # 7초 : 하양
+
+import RPi.GPIO as GPIO
+import time
 
 swPin = 14
 bluePin = 15

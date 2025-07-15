@@ -1,6 +1,7 @@
+# Interrupt 실습2 - 버튼 눌렀다 떼면 초록 led 출력
+
 import RPi.GPIO as GPIO
 import time
-# Interrupt 실습 - 버튼 눌렀다 떼면 초록 led 출력
 swPin = 14
 bluePin = 16
 redPin = 20

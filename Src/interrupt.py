@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import time
+
+# 인터럽트 실습1 - 인터럽트 맛보기
 swPin = 14
 
 GPIO.setmode(GPIO.BCM)
