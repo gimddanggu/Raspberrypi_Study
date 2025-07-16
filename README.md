@@ -247,6 +247,7 @@ GPIO PIN ●────────────→ 입력 신호 읽음
 - **Signal**: 센서가 측정한 값을 라즈베리파이에 전달하는 신호선
 
 센서의 측정값은 컴푸터가 이해할 수 있는 디지털 형태(0과 1)로 전달되는데 전기적으로 0과 1은 어떻게 구분되는건지 궁금했다.
+
 👉 **일정 전압 이상이면 '1', 미만이면 '0'** 으로 인식하는 **디지털 회로의 원리**를 기반으로 한다.
 예를 들어, 기준 전압(threshold)을 1.5V라고 했을 때 아래와 같이 해석하는 것이다.
 - 0V~1.5V → 0
@@ -268,8 +269,10 @@ GPIO PIN ●────────────→ 입력 신호 읽음
 → 10진수(24도)로 변환해 최종적으로 사람이 이해할 수 있는 값을 제공하는 것이다.
 
 이러한 전압을 왔다갔다하는 과정은 직접 구현할까?
+
 -> ❌
-전압 제어는 **센서 내부의 마이크로컨트롤러(센서 칩)**라즈베리파이의 GPIO 회로 + 라이브러리가 알아서 처리한다.
+
+전압 제어는 **센서 내부의 마이크로컨트롤러(센서 칩)** 라즈베리파이의 GPIO 회로 + 라이브러리가 알아서 처리한다.
 우리가 코드로 제어할 수 있는 부분은 다음과 같다:
 ```
 GPIO.output(pin, GPIO.HIGH)  # 해당 핀에 전압 출력 (3.3V)
@@ -286,7 +289,9 @@ GPIO.input(pin)              # 해당 핀의 전압 상태 읽기 (0V면 0, 3.3V
 #### 실습
 - (1) 스위치
     - [소스코드](./Src/button.py)
+
 - (2) 버튼 누른 횟수에 따른 LED 색 출력
+
     - [소스코드-눌림상태](./Src/led_button.py)
     - [소스코드-눌린 수 카운트](./Src/led_button2.py)
     - [소스코드-입력 시간에 따른 변화](./Src/led_button3.py)
@@ -427,10 +432,14 @@ finally:
 - (1) 온습도센싱값 콘솔 출력
     - [소스코드](./Src/dhtll.py)
     - 결과 화면 
+
         <img src="./image/rasp0009.png">
+
+
 - (2) 온습도센싱값 DB전달
     - [소스코드](./Src/sensingDB.py)
     - 결과 화면 
+
         <img src="./image/rasp0010.png">
 
 #### 🔴 실습 중 에러 사항
@@ -476,7 +485,7 @@ from PyQt5 import uic
 ```
 
 **코드 실행 흐름**
-
+<!-- 추가할 것-->
 
 ### 실습
 - Qt를 이용한 버튼으로 LED 제어하기 
@@ -510,7 +519,7 @@ exec_()는 Qt의 **이벤트 루프에 진입하는 함수**로, 이 이후에�
 - [소스코드-시도2](./Src/ledColorButton_try2.py)
 
 `btn_flag` 변수를 `Color` 클래스와 `main 함수`에서 공통으로 사용하기 위해 **전역 변수로 선언**했었다. 하지만 위의 1번에서 언급한 구조 변경으로 인해 main 함수에서 하던 로직을 모두 `WindowClass`로 옮기게 되었고, `setBlue`, `setRed`, `setGreen` 클래스 내부 함수들에서 `btn_flag`에 접근하려고 하자 접근이 되지 않았다. 파이썬에서 함수 내부에서 전역변수를 사용하기 위해서는  `global` 변수를 사용해야 하기 때문이였다. 
-처음에는 "같은 클래스 내 함수인데, 클래스 전체에서 한 번만 `global btn_flag` 해주면 안 되나?" 하는 의문도 들었지만, 결론은 **안 된다**이다.
+처음에는 **"같은 클래스 내 함수인데, 클래스 전체에서 한 번만 `global btn_flag` 해주면 안 되나?"** 하는 의문도 들었지만, 결론은 **안 된다**이다.
 
 `global` 키워드는 그 **함수 내부에서 전역 변수를 쓰겠다고 선언**하는 것이기 때문에 `btn_flag`를 사용하는 **모든 함수 안에서 각각 `global btn_flag`를 선언**해줘야 한다.
 
@@ -616,12 +625,13 @@ time.sleep(1)
 pwm.stop()
 GPIO.cleanup()
 ```
-> 참고⚠️ 라즈베리파이 아무 핀이나 연결가능하지만,
-PWM 신호로 소리를 내는 수동형 피에조 부저 특성상 가능한 하드웨어 PWM 지원 핀을 사용하는 것이 좋다. 
-- GPIO12
-- GPIO13
-- GPIO18
-- GPIO19
+> 참고⚠️ 
+라즈베리파이 아무 핀이나 연결가능하지만, PWM 신호로 소리를 내는 수동형 피에조 부저 특성상 가능한 **하드웨어 PWM 지원 핀**을 사용하는 것이 좋다. 
+- 하드웨어 PWM 지원 핀
+    - GPIO12
+    - GPIO13
+    - GPIO18
+    - GPIO19 
 
 위의 핀들을 사용할 시 소리의 품질이 더 안정적이다.
 
@@ -670,6 +680,39 @@ if GPIO.input(buttonPin) == GPIO.HIGH:
 
 ## 6일차
 ### 릴레이
+검출된 정보를 갖고 있는 제어 전류의 유뮤 또는 방향에 따라 다른 회로를 여닫는 장치
+입력이 어떤 값에 도달하였을 때 작동하여 다른 회로를 개폐하는 장치
+접점이 있는 릴레이, 서멀 릴레이, 압력 릴레이, 광 릴레이 등이 있다.
+일종의 스위치
+
+일반 스위치는 사용자가 직접 ON, OFF 를 해줘야 하지만 릴레이는 자동이다.
+#### 릴레이 - 종류
+- 내부 구성에 의한 분류
+    - SPST(Single Pole Single Throw): 입력 하나 출력 하나
+    - SPDT(Single Pole Double Throw): 입력 하나 출력 둘
+    - DPDT(Double Pole Double Throw): SPDT 2개가 합쳐진 형태
+- 접점 형태에 따른 분류
+    - A타입: 평상시 OFF
+    - B타입: 평상시 ON
+    - C타입: 평상시 한 개의 접점에 연결
+
+
+- 구조에 따른 분류
+    - 전자기 릴레이
+    - 반도체 릴레이
+#### 릴레이 - 동작 원리
+내부에 전자석(코일)을 포함하고 있다.
+**전자석** - 전류가 통하게 되면 자석이 되는 성질
+이러한 성질을 이용해 전원을 공급하게 되면 릴레이 내부의 전자석이 자석이 되어 옆에 있던 철편을 끄어당겨 스위치가 ON 되는 것이다. 
+
+릴레이의 일반적인 라인
+ - NC: Normal Close (평상시 Close)
+ - NO: Normal Open (평상시 Open)
+ - COM: Common (공통선)
+ - SIG: Signal (신호)
+ - GND: Ground (접지)
+ - VCC: Voltage (전원 전압)
+
 ### Interrupt
 <!--7.16일에 정리할 것
 + uic 흐름 코드도 추가로 정리할 것-->
@@ -739,3 +782,156 @@ GPIO.wait_for_edge()
 하지만 여러 색을 섞은 경우엔 파란색이 동작하지 않았고, 4초일 때 자홍이 아닌 **빨강만 출력**되었다.
 **VCC에 BLUE를 직접 연결해서 출력**되도록 한 후에 테스트 해보니 **다홍, 하양, 청록 색이 정상 출력되는 것을 확인**했다 
 아직 그 이유를 찾지 못했고, 내일 다시 시도해볼 예정이다.
+
+## 7일차
+### Flask
+- Python의 마이크로 웹 프레임워크
+- 작고 단순하지만 확장성이 좋다
+- Django 보다 가볍고 자유도가 높다
+- [Flask Doc](https://flask-docs-kr.readthedocs.io/ko/latest/quickstart.html)
+#### 기본 구조
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+#### 코드 설명
+**1. Flask 애플리케이션 인스턴스 생성**
+```
+app = Flask(__name__)
+```
+- `__name__` 을 통해 Flask가 현재 파일의 위치를 기준으로 정적 파일, 템플릿 등의 경로를 설정할 수 있게 도와준다.
+- Flask 애플리케이션을 만들고, 이후 라우팅 설정에 사용할 수 있게 함
+
+
+
+**2. 라우팅 설정**
+```
+@app.route('/')
+```
+-  `'/'`는 루트 URL의 경로를 의미
+- `@app.route()` 는 [데코레이터](#데코레이터)로, 특정 URL 경로에 대해 어떤 함수를 실행할지 지정해준다.
+- 경로 앞에 `'/'` 반드시 붙여주기!!! (안 붙일 경우 아래의 에러 발생)
+    ```
+    ValueError: urls must start with a leading slash
+    ```
+
+**3. 요청 처리 함수 (뷰 함수)**
+```
+def hello_world():
+    return 'Hello World!'
+```
+- 사용자가 `'/'` 경로로 접속하면 이 함수가 실행되어 **Hello World!** 라는 문자열이 브라우저에 출력된다.
+
+**4. 앱 실행**
+```
+if __name__ == '__main__':
+    app.run()
+```
+- 현재 파일이 직접 실행되었을 경우 Flask 서버를 실행하도록 하는 조건
+(다른 파일에서 import 될 경우 실행 x)
+- `app.run()` 은 기본적으로 개발 서버 실행
+- `localhost:5000` 에서 웹 애플리케이션 실행
+- 인자로 `host='0.0.0.0'` 을 줬을 경우 모든 아이피에서 접속 가능
+- `port=` 인자로 직접 포트번호 설정 가능 (기본 5000)
+- `debug=True` 인자 사용시
+    - 코드 변경시 **자동으로 리로드**
+    - 에러 발생시 **디버깅 도구 제공**
+> **주의할 점 ⚠️**
+파일이름을  `flask.py`로 하지않기! (Flask 자체와 충돌)
+
+### 데코레이터
+- 함수를 꾸며주는 함수, 기존 함수에 기능을 추가하는 함수
+- `@` 기호를 이용해서 사용하고, **함수의 동작을 감싸서 수정하거나 확장**할 수 있게 해준다.
+
+- 예제 코드
+    ```python
+    def decorator(func):
+        def wrapper():
+            print("시작!")
+            func()
+            print("끝!")
+        return wrapper
+
+    @decorator
+    def say_hello():
+        print("안녕!")
+
+    say_hello()
+    ```
+- 실행결과
+    ```
+    시작!
+    안녕!
+    끝!
+    ```
+- 위 실행결과를 통해 `say_hello()` 를 실행하면 `decorator(say_hello())` 형태로 실행되는 것을 확인할 수 있다.
+- 🧠📌`@decorator`는 `say_hello = decorator(say_hello)`와 같음
+
+#### FLASK에서의 데코레이터 (@app.route('/'))
+```python
+@app.route('/')
+def index():
+    return 'Hello'
+```
+- Flask 내부적으로 `route()` 라는 함수가 `index()` 함수를 받아옴
+- `'/'` 경로에 요청이 오면 실행되는 함수라고 등록해줌
+- 하나의 데코레이터에 여러 개의 함수를 등록할 순 없음
+    - 같은 경로(/ 등)에 여러 함수가 있으면, **나중 함수가 이전 함수를 덮어쓴다**
+- 하나의 함수에 여러 경로는 가능
+    ```python
+    @app.route('/')
+    @app.route('/home')
+    def hello():
+        return 'Hello!'
+    ```
+### 실습
+- 릴레이 한번 더 실습
+    - [실습코드](./Src/relayEx.py)
+- Flask 실습
+    - Flask 맛보기
+        - [실습코드](./Src/app2.py)
+    - Flask 라우터를 이용해 led 출력하기
+        - [실습코드1](./Src/appLed1.py)
+        - [실습코드2](./Src/appLed2.py)
+        - [실습코드3](./Src/appLed3.py)
+
+### 🔴 에러 및 해결 과정
+
+#### **1. 실습3 - app.run(debug=True) 문제
+처음 코드를 작성했을 때 분명히 핀을 제대로 꽂았고 코드 상에서도 확인을 했으나 
+다음과 같은 에러가 발생했다.
+```
+lgpio.error: 'GPIO not allocated'
+```
+하나하나 코드를 삭제하고 실행시키며 어디가 문제인지 찾아본 결과 
+`app.run(host='0.0.0.0', debug=True)` 에서 `debug=True` 에서 문제가 발생한 것이였다.
+
+> 🤔 이유는? 
+이유를 확인해본 결과 debug=True는 내부적으로 앱을 두 번 실행되기 떄문이다.
+기본적으로 use_reloader=True 가 설정되는데 이는 코드 변경을 감지해 자동으로 Flask 서버를 재시작하게 해주는 기능이다.
+
+이때 Flask 앱이 처음 실행될 때와 재시작될 때 총 두 번 실행되면서 GPIO 핀을 중복 설정하게 되어 에러가 발생하는 것이다.
+
+**해결방법**
+(1) reloader 끄기
+```python
+app.run(host='0.0.0.0', debug=True, use_reloader=False)
+```
+(2) 해결 방법 2: GPIO 설정을 __name__ == '__main__' 블록 안으로 이동
+```python
+if __name__ == "__main__":
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(redPin, GPIO.OUT)
+    GPIO.setup(bluePin, GPIO.OUT)
+    GPIO.setup(greenPin, GPIO.OUT)
+
+    app.run(host='0.0.0.0', debug=True)
+```
+reloader 때문에 두 번 실행될 떄 GPIO 설정은 한번만 실행되므로 충돌을 피할 수 있다.
