@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>실시간 영상</title>
+	<style>
+		body {
+			margin: 0;
+			background-color: #000;
+			color: white;
+			text-align: center;
+			font-family: Arial, sans-serif;
+		}
+		h1 {
+			margin-top: 20px;
+		}
+		.video-container {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin-top: 20px;
+		}
+		.stream-frame {
+			border: 3px solid #4CAF50;
+			border-radius: 8px;
+			width: 80%;
+			max-width: 800px;
+		}
+	</style>
+</head>
+<body>
+	<h1>실시간 차량 카메라 스트리밍</h1>
+	<div class="video-container">
+		<img src="http://192.168.0.7:81/stream" class="stream-frame">
+	</div>
+	<a href="{{ url_for('logout') }}">[로그아웃]</a><br><br>
+</body>
+</html>
